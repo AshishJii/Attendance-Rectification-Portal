@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendence Portal</title>
+    <link rel="stylesheet" href="./requestAssets/request.css">
+</head>
+
+<body>
+    <div class="login-container">
+        <div class="formData">
+                <img src="./requestAssets/psit.png" alt="PSIT" class="google-logo">
+            <h2>Attendence Rectification Portal</h2>
+            <br>
+
+            <form>
+
+                <div class="input-group">
+                    <label for="roll"><b>Roll No</b></label>
+                    <input type="number" id="rollIn" name="roll number" placeholder="Enter Your Roll">
+                    <button id="verifyBut" type="button">Verify</button> <!--Dont change this tag's id-->
+                </div>
+
+                <div class="input-group">
+                    <label for="date"><b>Date</b></label>
+                    <input type="date" id="dateIn" placeholder="Rectification Date">
+                </div>
+                <br>
+                <div class="input-group">
+                    <label for="period"><b>Period</b></label>
+                    <br>
+                    <div class="buttonContainer">
+                        <button type="button" index="0">1</button>
+                        <button type="button" index="1">2</button>
+                        <button type="button" index="2">3</button>
+                        <button type="button" index="3">4</button>
+
+                        <br>
+                        <button type="button" index="4">5</button>
+                        <button type="button" index="5">6</button>
+                        <button type="button" index="6">7</button>
+                        <button type="button" index="7">8</button>
+                        <br>
+                        <button type="button" index="8">Evening Class</button>
+                    </div>
+                </div>
+
+                <button type="button" id="submitBut">Submit</button>
+                <br>
+                <a href="./rectifications.html">Admin Page>></a>
+            </form>
+        </div>
+        
+        <!--Dont change this container box id-->
+        <div id="personData"></div>
+    </div>
+     
+  <script src="./requestAssets/request.js"></script>
+</body>
+
+</html>
