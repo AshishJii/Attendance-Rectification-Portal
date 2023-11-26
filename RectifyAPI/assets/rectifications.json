@@ -1,0 +1,26 @@
+[
+  {
+    "roll": "23456",
+    "date": "2023-11-10",
+    "periodsArr": [
+      {"no": 1, "faculty": "Jane Doe"},
+      {"no": 3, "faculty": "Alice"}
+    ]
+  },
+  {
+    "roll": "67890",
+    "date": "2023-11-12",
+    "periodsArr": [
+      {"no": 5, "faculty": "Bob"},
+      {"no": 7, "faculty": "Charlie"}
+    ]
+  },
+  {
+    "roll": "90123",
+    "date": "2023-11-14",
+    "periodsArr": [
+      {"no": 2, "faculty": "David"},
+      {"no": 6, "faculty": "Eva"}
+    ]
+  }
+]
