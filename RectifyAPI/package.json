@@ -1,0 +1,19 @@
+{
+  "name": "rectifyapi",
+  "version": "1.0.0",
+  "description": "The api blueprint of the upcoming rectification portal",
+  "main": "app.js",
+  "scripts": {
+    "start": "nodemon app.js"
+  },
+  "author": "Ashu",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "morgan": "^1.10.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.54.0",
+    "nodemon": "^3.0.1"
+  }
+}
