@@ -122,7 +122,7 @@ const handleSubmit = () => {
         if(sel)
             formData.periodsArr.push({
                 "no": idx + 1,
-                "faculty": "MSdhoni"
+                "faculty": "Amitas"
         })
     })
     console.log("Submitting data : "+JSON.stringify(formData));

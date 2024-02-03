@@ -157,7 +157,8 @@ body{
   margin: 4px 2px;
   transition-duration: 0.4s;
   cursor: pointer;
-  background-color: rgb(115, 112, 112);
+  background-color: #515aba;
+  opacity: 0.7;
   border: 2px solid #edf1f0;
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   border-radius: 10px;
@@ -172,7 +173,7 @@ body{
 } */
 
 #submitBut {
-  background-color: #4285f4;
+  background-color: #191e55;
   /* Green */
   border: none;
   color: white;
@@ -183,7 +184,7 @@ body{
   margin: 4px 2px;
   cursor: pointer;
   width: 100%;
-  border: 2px solid white;
+  box-shadow: inset grey 10px;
   border-radius: 20px;
   margin-top: 20px;
   margin-bottom: 20px;
