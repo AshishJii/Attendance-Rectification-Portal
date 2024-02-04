@@ -26,6 +26,8 @@ app.use((req, res, next) => {
     next();
 });
 
+app.use(express.static(`${__dirname}/public`));
+
 
 app.get('/api/students/:roll', (req, res) => {
 
@@ -85,21 +87,7 @@ app.delete('/api/rectifications/:roll', (req,res) => {
     })
 });
 
-
-const port = 4001;
-app.listen(port, ()=>{
-    console.log("API Server started at port: ",port);
-})
-
-
-
-
-
-
-
-
-
-
+module.exports = app;
 
 
 
