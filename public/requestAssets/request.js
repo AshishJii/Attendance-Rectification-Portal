@@ -7,37 +7,30 @@ const submitBut = document.querySelector("#submitBut");
 const verifyBut = document.querySelector("#verifyBut");
 
 //Event listeners
-dateInput.addEventListener('change', () => {
-    dateHandler(dateInput);
-});
+dateInput.addEventListener('change', () => dateHandler(dateInput));
 buttonsContainer.addEventListener('click', e => {
     if(e.target.tagName === 'BUTTON')
         buttonClicked(e.target);
 });
-submitBut.addEventListener('click', () => {
-    handleSubmit();
-});
+submitBut.addEventListener('click', handleSubmit);
+verifyBut.addEventListener('click', fetchData);
 
-verifyBut.addEventListener('click', () => {
-    fetchData();
-});
-
-var a;
-//Period Button selection logic
-const selectedButs = [false,false,false,false,false,false,false,false,false];
-const buttonClicked = (but) => {
-    but.classList.toggle('selectedPeriod');
-    selectedButs[but.getAttribute("index")] = !selectedButs[but.getAttribute("index")];
-    console.log(selectedButs);
-    a = but;
-}
-
+const selectedButs = new Array(9).fill(false);
 //final form data
 let formData = {
     roll: null,
     date:null,
     periodsArr:[]   // {"no":6,"faculty":"Shami"}
 }
+
+const buttonClicked = but => {
+    but.classList.toggle('selectedPeriod');
+    const idx = but.getAttribute("index");
+    selectedButs[idx] = !selectedButs[idx];
+    console.log(selectedButs);
+}
+
+const dateHandler = ele => formData.date = ele.value;
 
 // fetches name & image from roll no.
 const fetchData = () => {
@@ -47,15 +40,15 @@ const fetchData = () => {
     
     fetchInfoAPI(roll)
         .then((msg) => {
-            console.log("Fetched Data : "+JSON.stringify(msg));
+            console.log("Fetched Data : "+JSON.stringify(msg.data.student));
             pdContainer.innerHTML = "";
-            if(msg.status == 'fail'){
+            if(msg.status !== 'success'){
                 const msgElement = document.createElement('span');
                 msgElement.textContent = msg.message;
-                console.log(msgElement);
                 pdContainer.appendChild(msgElement);
             }
             else{   //msg.status == 'success'
+                const student = msg.data.student;
                 const imagElement = document.createElement('img');
                 Object.assign(imagElement.style, {
                     width: '0px',
@@ -63,8 +56,8 @@ const fetchData = () => {
                     boxShadow: '0 0 10px rgba(0, 0, 0, 0.2)',
                     transition: 'width 0.5s ease',
                 });
-                imagElement.src = msg.data.stdata.Image;
-                imagElement.alt = msg.data.stdata.Image;
+                imagElement.src = student.imageLink;
+                imagElement.alt = student.imageLink;
                 
                 
                 const namElement = document.createElement('div');
@@ -74,7 +67,7 @@ const fetchData = () => {
                     fontSize: '0px',
                     transition: 'font-size 0.5s',
                 });
-                namElement.textContent = msg.data.stdata.Name;
+                namElement.textContent = student.name;
 
                 imagElement.onload = function () {
                     pdContainer.appendChild(imagElement);
@@ -93,8 +86,7 @@ const fetchData = () => {
         .catch(e => console.error("Error in fetchData: ", e)); 
 }
 
-// fills form with dateInput value
-const dateHandler = ele => formData.date = ele.value;
+
 
 // validate data before submitting form
 const validateData = () => {
@@ -116,8 +108,9 @@ const validateData = () => {
 
 // submitting info
 const handleSubmit = () => {
-    if(!validateData()) return false;
+    if(!validateData()) return;
 
+    //formData.periodsArr = selectedButs.map((sel, idx) => sel ? { "no": idx + 1, "faculty": "Amitas" } : null).filter(Boolean);
     selectedButs.forEach((sel, idx) =>{
         if(sel)
             formData.periodsArr.push({
@@ -129,7 +122,14 @@ const handleSubmit = () => {
 
     submitRequestAPI(formData)
         .then( res => {
-            if(res.status == 201) alert("Request Submitted. See Console");
+            if(res.status == 201){ 
+                alert("Request Submitted. See Console");
+                formData = {
+                    roll: null,
+                    date:null,
+                    periodsArr:[]
+                }
+            }
         })
         .catch(e => console.error("Error in handleSubmit: ", e));
 };

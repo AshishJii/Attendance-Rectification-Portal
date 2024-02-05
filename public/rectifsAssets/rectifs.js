@@ -5,7 +5,9 @@ populateTable = () => {
     tableBody.innerHTML = "";
     fetchRectifsAPI().then( res => {
         let serialNo = 1;
-        res.forEach(rectif=> {
+        console.log(JSON.stringify(res));
+        const rectifs = res.data.rectifs;
+        rectifs.forEach(rectif=> {
             let row = createTableRow(rectif, serialNo++);
             tableBody.appendChild(row);
         })
@@ -16,10 +18,10 @@ populateTable = () => {
 tableBody.addEventListener('click', (e) => {
     if(e.target.classList.contains('delete-button')){
         let row = e.target.closest('tr');
-        let roll = row.getAttribute('data-roll');
-        console.log(`Delete button clicked for roll: ${roll}`);
+        let id = row.getAttribute('data-roll');
+        console.log(`Delete button clicked for ID: ${id}`);
 
-        deleteRecordAPI(roll).then(res => {
+        deleteRecordAPI(id).then(res => {
             row.remove();
         }).catch(err => {
             console.error('Error deleting record:', err);
@@ -29,13 +31,13 @@ tableBody.addEventListener('click', (e) => {
 
 const createTableRow = (rectif, serialNo) => {
     let row = document.createElement("tr");
-    row.setAttribute("data-roll", rectif.roll);
+    row.setAttribute("data-roll", rectif._id);
     row.innerHTML = `
     <td>${serialNo}.</td>
     <td>
-        <span>${rectif.Name}</span><br>
-        <span>${rectif.roll}</span><br>
-        <img width="100" src="${rectif.Image}">
+        <span>${rectif.student.name}</span><br>
+        <span>${rectif.student.roll}</span><br>
+        <img width="100" src="${rectif.student.imageLink}">
     </td>
     <td>${rectif.date}</td>
     <td>${rectif.periodsArr.map(ob => `<br>${ob.no} : ${ob.faculty}`).join('')}</td>
@@ -71,8 +73,8 @@ fetchRectifsAPI = async () => {
 }
 
 //DELETE record API
-deleteRecordAPI = async (roll) => {
-    const url = RECTIFICATIONS_URL+roll;
+deleteRecordAPI = async (id) => {
+    const url = RECTIFICATIONS_URL+id;
     let postData = {
             method: "DELETE",
             headers: {

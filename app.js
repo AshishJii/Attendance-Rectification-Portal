@@ -1,91 +1,130 @@
-const fs = require('fs');
 const morgan = require('morgan');
 const express = require('express');
+const cookieParser = require('cookie-parser');
+const jwt = require('jsonwebtoken');
+const Student = require('./models/studentModel');
+const Rectif = require('./models/rectifModel');
+const catchAsync = require('./utils/catchAsync');
+
 const app = express();
-//top level code
-const students = JSON.parse(fs.readFileSync(`${__dirname}/assets/students.json`));
-//console.log(students);
-const rectifs = JSON.parse(fs.readFileSync(`${__dirname}/assets/rectifications.json`));
-
-//TOdo
-//create a roll check function
-//Remove the  id property from Students.json
-
-//For students
-//getting verification data
-
 app.use(express.json());
 app.use(morgan('dev'));
+app.use(cookieParser());
 
-// Enable CORS for all routes
-app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
-   // res.header('Access-Control-Allow-Origin', 'http://192.168.137.1:3333');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, DELETE');
-    res.header('Access-Control-Allow-Headers', 'Content-Type');
-    next();
-});
+app.use(express.static(`${__dirname}/public`,{extensions:['html']}));
 
-app.use(express.static(`${__dirname}/public`));
-
-
-app.get('/api/students/:roll', (req, res) => {
-
-    if(req.params.roll in students){
-        const stdata = students[req.params.roll];
+//For students
+//Getting verification data
+app.get('/api/students/:roll', catchAsync(async (req, res, next) => {
+    const {roll} = req.params;
+    const student = await Student.findOne({roll});
+    if(student){
         return res.status(200).json({
             status: "success",
-            data: {stdata}
+            data: { student }
         });
     }
 
     res.status(404).json({
-            status: "fail",
-            message: "Student ID not found"
-        });
-});
+        status: "fail",
+        message: "Student ID not found"
+    });
+}));
 
 //posting rectification request
-app.post('/api/rectifications', (req, res) => {
-    const newRectif = req.body;
-    rectifs.push(newRectif);
-    fs.writeFile(`${__dirname}/assets/rectifications.json`, JSON.stringify(rectifs), ()=>{
-        res.status(201).send();
-    })
-});
+app.post('/api/rectifications', catchAsync(async (req, res, next) => {
+    const { roll, date, periodsArr } = req.body;
+    const student = await Student.findOne({ roll });
+    if (!student) {
+        return res.status(404).json({
+            status: 'fail',
+            message: 'Student not found'
+        });
+    }
+    const rectif = await Rectif.create({
+        student: student._id,
+        rawDate: new Date(date),
+        periodsArr: periodsArr
+    });
 
+    res.status(201).json({
+        status: 'success',
+        data: {rectif}
+    })
+}));
 
 //For faculty
-//getting rectification records
-app.get('/api/rectifications', (req,res) => {
-    const fData =  rectifs.map(obj => ({
-        ...students[obj.roll],
-        ...obj,
-        
-    }));
-    res.status(200).json(fData);
-});
-
-//deleting rectifications
-app.delete('/api/rectifications/:roll', (req,res) => {
-    const roll = req.params.roll;
-    //Replace this line : Store the array of rectified attendences
-    const indicesToRemove = rectifs.reduce((indices, obj, idx) => {
-        if (obj.roll == roll) {
-          indices.push(idx);
-        }
-        return indices;
-      }, []);
-      
-
-    for(let i = indicesToRemove.length - 1; i >= 0; i--) {
-        rectifs.splice(indicesToRemove[i], 1);
+const authenticate = catchAsync(async (req,res, next) => {
+    let token = req.cookies.jwtToken;
+    console.log('jwt', token);
+    if(!token){
+        res.status(401).json({
+            status: 'fail',
+            message: 'not logged in'
+        })
     }
 
-    fs.writeFile(`${__dirname}/assets/rectifications.json`, JSON.stringify(rectifs), ()=>{
-        res.status(204).send();
-    })
+    jwt.verify(token,process.env.JWT_SECRET_KEY,(err, verifiedJwt) => {
+        if(err){
+            res.status(401).json({
+                status: 'fail',
+                message: 'not logged in'
+            });
+        } else next();
+      });
 });
+
+//getting rectification records
+app.get('/api/rectifications', authenticate, catchAsync(async (req, res, next) => {
+    const rectifs = await Rectif.find().populate('student');
+    res.status(200).json({
+        status: 'success',
+        data: { rectifs }
+    })
+}));
+
+//deleting rectifications
+app.delete('/api/rectifications/:id', authenticate, catchAsync(async (req,res, next) => {
+    const {id} = req.params;
+    const rectif = await Rectif.findByIdAndDelete(id);
+    if(!rectif){
+        return res.status(404).json({
+            status: "fail",
+            message: "Rectification record not found"
+        });
+    }
+
+    res.status(200).json({
+        status: 'success',
+        data: null
+    })
+}));
+
+
+//Authentications
+app.post('/login', catchAsync(async (req, res, next) => {
+    const {username, password} = req.body;
+    
+    if(username === process.env.ADMIN_USERNAME && 
+        password === process.env.ADMIN_PASSWORD){
+            const token = jwt.sign({id: username}, process.env.JWT_SECRET_KEY, {
+                expiresIn: process.env.JWT_EXPIRES_IN
+            });
+
+            res.cookie('jwtToken', token, { httpOnly: true, secure: false });
+            
+            res.status(200).json({
+                status: 'success',
+                data: null
+            });
+        }
+    else{
+        res.status(401).json({
+            success: 'fail',
+            message: 'Incorrect Credentials'
+        })
+    }
+}));
 
 module.exports = app;
 
@@ -93,23 +132,43 @@ module.exports = app;
 
 
 
+app.use('/', catchAsync(async (req,res,next) => {
+    const grouped = await Rectif.aggregate([
+        {
+            $unwind: '$periodsArr'
+        },
+        {
+            $group: {
+                _id: '$periodsArr.faculty',
+                faculty: { $first: '$periodsArr.faculty' },
+                rectifs: { 
+                            student: '$student',
+                            periodArr: '$periodsArr'
+                        }
+                    }
+                }
+        ]);
+    res.status(201).json({
+        status: 'success',
+        data: grouped
+    })
+}))
+
+//error handler
+app.use((err, req, res, next) => {
+    console.error(err);
+    res.status(500).json({
+        status: "error",
+        message: "Internal Server Error"
+    });
+})
+
+
+
 //  JSend objects
+//Sending/Storing data(submit button)  POST
 
-//Students
-//Getting inforamtion(on verify button click)       GET
-let v = 
-{
-    status: "success",
-    data: {
-        name: "Bhupendra Jogi",
-        branch: "CS AI",
-        image: "https://erp.psit.ac.in/assets/img/Simages/2213048.jpg"
-    }
-}
-
-//Sending/Storing data(submit button)              POST
-
-v =
+let v =
 {
     roll : 2201640100092,
     daysArr: [
