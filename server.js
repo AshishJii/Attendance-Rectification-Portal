@@ -14,7 +14,8 @@ const db = process.env.DATABASE.replace('<password>',process.env.DB_PASSWORD);
 const port = process.env.PORT || 4001;
 mongoose.connect(db).then(()=>{
     console.log("Database Connected");
-    console.log(`Click here: http://127.0.0.1:${port}/request`);
+    console.log(`Click here to launch▶️: http://127.0.0.1:${port}/request`);
+    console.log(`Temporary aggregation display: http://127.0.0.1:${port}`);
 }).catch(err=>{
     console.error("Error connecting to MongoDB:", err.message);
 })

@@ -62,21 +62,30 @@ const fetchData = () => {
                 
                 const namElement = document.createElement('div');
                 Object.assign(namElement.style, {
-                    margin: '15px',
+                    marginTop: '15px',
                     fontWeight: 'bold',
                     fontSize: '0px',
                     transition: 'font-size 0.5s',
                 });
                 namElement.textContent = student.name;
 
+                const brchElement = document.createElement('div');
+                Object.assign(brchElement.style, {
+                    fontSize: '0px',
+                    transition: 'font-size 0.5s',
+                });
+                brchElement.textContent = student.branch;
+
                 imagElement.onload = function () {
                     pdContainer.appendChild(imagElement);
                     pdContainer.appendChild(document.createElement("br"))
                     pdContainer.appendChild(namElement);
+                    pdContainer.appendChild(brchElement);
                     
                     setTimeout(() => {
                         imagElement.style.width = '200px';
                         namElement.style.fontSize = '20px';
+                        brchElement.style.fontSize = '18px';
                     }, 50);
                 };
 
