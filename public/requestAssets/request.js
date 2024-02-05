@@ -12,8 +12,8 @@ buttonsContainer.addEventListener('click', e => {
     if(e.target.tagName === 'BUTTON')
         buttonClicked(e.target);
 });
-submitBut.addEventListener('click', handleSubmit);
-verifyBut.addEventListener('click', fetchData);
+submitBut.addEventListener('click', ()=>handleSubmit());
+verifyBut.addEventListener('click', ()=>fetchData());
 
 const selectedButs = new Array(9).fill(false);
 //final form data

@@ -139,19 +139,49 @@ app.use('/', catchAsync(async (req,res,next) => {
         },
         {
             $group: {
-                _id: '$periodsArr.faculty',
-                faculty: { $first: '$periodsArr.faculty' },
-                rectifs: { 
-                            student: '$student',
-                            periodArr: '$periodsArr'
-                        }
+                _id: {
+                    faculty: '$periodsArr.faculty',
+                    date: { $dateToString: { format: '%d-%m-%Y', date: '$rawDate' } },
+                    student: '$student'
+                },
+                periodsArr: { $push: '$periodsArr.no' }
+            }
+        },
+        {
+            $group: {
+                _id: {
+                    faculty: '$_id.faculty',
+                    date: "$_id.date"
+                },
+                students: {
+                    $push: {
+                        student: '$_id.student',
+                        periodsArr: '$periodsArr'
                     }
                 }
-        ]);
-    res.status(201).json({
+            }
+        },
+        {
+            $group: {
+                _id: '$_id.faculty',
+                rectifs: {
+                    $push: {
+                        date: '$_id.date',
+                        students: '$students'
+                    }
+                }
+            }
+        }
+    ]);
+    
+    console.log(grouped);
+    const jsonData = {
         status: 'success',
         data: grouped
-    })
+    };
+    const htmlContent = generateHTML(jsonData);
+    res.send(htmlContent);
+    //res.status(201).json()
 }))
 
 //error handler
@@ -166,45 +196,47 @@ app.use((err, req, res, next) => {
 
 
 //  JSend objects
-//Sending/Storing data(submit button)  POST
-
-let v =
-{
-    roll : 2201640100092,
-    daysArr: [
-        {
-            date: "2023-11-11",
-            periods: 2,
-            periodsArr: [
-                {
-                    no: 5,
-                    faculty: "Amitabh Bachchan"
-                },
-                {
-                    no: 6,
-                    faculty: "Amitabh Bachchan"
-                }
-            ]
-        },
-        {
-            date: "2023-11-15",
-            periods: 3,
-            periodsArr: [
-                {
-                    no: 1,
-                    faculty: "Stephan Hawking"
-                },
-                {
-                    no: 5,
-                    faculty: "Jay Shah"
-                },
-                {
-                    no: 6,
-                    faculty: "Moon"
-                }
-            ]
-        }
-    ]
-}
-
-//console.log(JSON.stringify(v));
+function generateHTML(jsonData) {
+    let html = `
+      <!DOCTYPE html>
+      <html lang="en">
+      <head>
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Dynamic HTML Response</title>
+      </head>
+      <body>
+        <h1>Status: ${jsonData.status}</h1>
+        <ul>
+    `;
+  
+    jsonData.data.forEach(faculty => {
+      html += `<li><strong>${faculty._id}</strong>`;
+      
+      faculty.rectifs.forEach(rectif => {
+        html += `<ul>`;
+        html += `<li>Date: ${rectif.date}`;
+        
+        rectif.students.forEach(student => {
+          html += `<ul>`;
+          html += `<li>Student: ${student.student}</li>`;
+          html += `<li>Periods Arr: ${JSON.stringify(student.periodsArr)}</li>`;
+          html += `</ul>`;
+        });
+  
+        html += `</li>`;
+        html += `</ul>`;
+      });
+  
+      html += `</li>`;
+    });
+  
+    html += `
+        </ul>
+      </body>
+      </html>
+    `;
+  
+    return html;
+  }
