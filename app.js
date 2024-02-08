@@ -10,7 +10,6 @@ const app = express();
 app.use(express.json());
 app.use(morgan('dev'));
 app.use(cookieParser());
-
 app.use(express.static(`${__dirname}/public`,{extensions:['html']}));
 
 //For students
@@ -54,6 +53,7 @@ app.post('/api/rectifications', catchAsync(async (req, res, next) => {
 }));
 
 //For faculty
+//login
 const authenticate = catchAsync(async (req,res, next) => {
     let token = req.cookies.jwtToken;
     console.log('jwt', token);
@@ -74,14 +74,74 @@ const authenticate = catchAsync(async (req,res, next) => {
       });
 });
 
-//getting rectification records
-app.get('/api/rectifications', authenticate, catchAsync(async (req, res, next) => {
+//getting rectification records arranged by students
+app.get('/api/rectifs_bystudent', authenticate, catchAsync(async (req, res, next) => {
     const rectifs = await Rectif.find().populate('student');
     res.status(200).json({
         status: 'success',
-        data: { rectifs }
+        data: rectifs
     })
 }));
+
+//getting rectification records arranged by faculty
+app.use('/api/rectifs_byfaculty', catchAsync(async (req, res, next) => {
+    const grouped = await Rectif.aggregate([
+        {
+            $unwind: '$periodsArr'
+        },
+        {
+            $group: {
+                _id: {
+                    faculty: '$periodsArr.faculty',
+                    date: { $dateToString: { format: '%d-%m-%Y', date: '$rawDate' } },
+                    student: '$student'
+                },
+                periodsArr: { $addToSet: '$periodsArr.no' }
+            }
+        },
+        {
+            $lookup: {
+                from: 'students',
+                localField: '_id.student',
+                foreignField: '_id',
+                as: 'student'
+            }
+        },
+        {
+            $group: {
+                _id: {
+                    faculty: '$_id.faculty',
+                    date: "$_id.date"
+                },
+                students: {
+                    $push: {
+                        student: { $arrayElemAt: ['$student', 0] },
+                        periodsArr: '$periodsArr'
+                       
+                    }
+                }
+            }
+        },
+        {
+            $group: {
+                _id: '$_id.faculty',
+                rectifs: {
+                    $push: {
+                        date: '$_id.date',
+                        students: '$students'
+                    }
+                }
+            }
+        }
+    ]);
+    
+    console.log(JSON.stringify(grouped));
+
+    res.status(200).json({
+        status: 'success',
+        data: grouped
+    })
+}))
 
 //deleting rectifications
 app.delete('/api/rectifications/:id', authenticate, catchAsync(async (req,res, next) => {
@@ -99,7 +159,6 @@ app.delete('/api/rectifications/:id', authenticate, catchAsync(async (req,res, n
         data: null
     })
 }));
-
 
 //Authentications
 app.post('/login', catchAsync(async (req, res, next) => {
@@ -126,64 +185,6 @@ app.post('/login', catchAsync(async (req, res, next) => {
     }
 }));
 
-module.exports = app;
-
-
-
-
-
-app.use('/', catchAsync(async (req,res,next) => {
-    const grouped = await Rectif.aggregate([
-        {
-            $unwind: '$periodsArr'
-        },
-        {
-            $group: {
-                _id: {
-                    faculty: '$periodsArr.faculty',
-                    date: { $dateToString: { format: '%d-%m-%Y', date: '$rawDate' } },
-                    student: '$student'
-                },
-                periodsArr: { $push: '$periodsArr.no' }
-            }
-        },
-        {
-            $group: {
-                _id: {
-                    faculty: '$_id.faculty',
-                    date: "$_id.date"
-                },
-                students: {
-                    $push: {
-                        student: '$_id.student',
-                        periodsArr: '$periodsArr'
-                    }
-                }
-            }
-        },
-        {
-            $group: {
-                _id: '$_id.faculty',
-                rectifs: {
-                    $push: {
-                        date: '$_id.date',
-                        students: '$students'
-                    }
-                }
-            }
-        }
-    ]);
-    
-    console.log(grouped);
-    const jsonData = {
-        status: 'success',
-        data: grouped
-    };
-    const htmlContent = generateHTML(jsonData);
-    res.send(htmlContent);
-    //res.status(201).json()
-}))
-
 //error handler
 app.use((err, req, res, next) => {
     console.error(err);
@@ -193,50 +194,4 @@ app.use((err, req, res, next) => {
     });
 })
 
-
-
-//  JSend objects
-function generateHTML(jsonData) {
-    let html = `
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-        <meta charset="UTF-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Dynamic HTML Response</title>
-      </head>
-      <body>
-        <h1>Status: ${jsonData.status}</h1>
-        <ul>
-    `;
-  
-    jsonData.data.forEach(faculty => {
-      html += `<li><strong>${faculty._id}</strong>`;
-      
-      faculty.rectifs.forEach(rectif => {
-        html += `<ul>`;
-        html += `<li>Date: ${rectif.date}`;
-        
-        rectif.students.forEach(student => {
-          html += `<ul>`;
-          html += `<li>Student: ${student.student}</li>`;
-          html += `<li>Periods Arr: ${JSON.stringify(student.periodsArr)}</li>`;
-          html += `</ul>`;
-        });
-  
-        html += `</li>`;
-        html += `</ul>`;
-      });
-  
-      html += `</li>`;
-    });
-  
-    html += `
-        </ul>
-      </body>
-      </html>
-    `;
-  
-    return html;
-  }
+module.exports = app;

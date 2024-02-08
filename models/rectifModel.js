@@ -5,8 +5,8 @@ const rectifSchema = mongoose.Schema({
     student: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Student',
-        required: true,
-        unique: true
+        required: true
+        //unique: true
     },
     rawDate: {
         type: Date,

@@ -6,16 +6,8 @@ const dateInput = document.querySelector("#dateIn");
 const submitBut = document.querySelector("#submitBut");
 const verifyBut = document.querySelector("#verifyBut");
 
-//Event listeners
-dateInput.addEventListener('change', () => dateHandler(dateInput));
-buttonsContainer.addEventListener('click', e => {
-    if(e.target.tagName === 'BUTTON')
-        buttonClicked(e.target);
-});
-submitBut.addEventListener('click', ()=>handleSubmit());
-verifyBut.addEventListener('click', ()=>fetchData());
+const eveningBut = document.querySelector("#evening");
 
-const selectedButs = new Array(9).fill(false);
 //final form data
 let formData = {
     roll: null,
@@ -23,12 +15,73 @@ let formData = {
     periodsArr:[]   // {"no":6,"faculty":"Shami"}
 }
 
-const buttonClicked = but => {
-    but.classList.toggle('selectedPeriod');
-    const idx = but.getAttribute("index");
-    selectedButs[idx] = !selectedButs[idx];
-    console.log(selectedButs);
+//Event listeners
+dateInput.addEventListener('change', () => dateHandler(dateInput));
+eveningBut.addEventListener('click', e => {
+    const idx = e.target.getAttribute('index');
+    if(formData.periodsArr[idx] ==  null){
+        e.target.classList.add('selectedPeriod');
+        formData.periodsArr[idx] = {
+            "no": parseInt(idx) + 1,
+            "faculty": "Evening Class"
+        };
+    }
+    else {
+        e.target.classList.remove('selectedPeriod');
+        formData.periodsArr[idx] = null;
+    }
+    console.log(JSON.stringify(formData.periodsArr));
+});
+submitBut.addEventListener('click', ()=>handleSubmit());
+verifyBut.addEventListener('click', ()=>fetchData());
+
+//------------------------------------------------------------------
+
+const periodDropdowns = document.querySelectorAll('.buttonContainer .period-dropdown');
+const facultyArr = ['Amitas', 'Raghaw Shukla', 'Smita Mishra', 'RO water'];
+
+function addOptionsToDropdown(dropdown) {
+    facultyArr.forEach((faculty, index) => {
+        const option = document.createElement('option');
+        option.value = faculty;
+        option.textContent = faculty;
+
+        dropdown.appendChild(option);
+});
 }
+
+periodDropdowns.forEach(dropdown => {
+    addOptionsToDropdown(dropdown);
+    dropdown.addEventListener('change', handlePeriodChange);
+});
+
+const selectedButs = new Array(9).fill(false);
+
+
+function handlePeriodChange(event) {
+  const selectedDropdown = event.target;
+  const idx = selectedDropdown.getAttribute('index');
+  const faculty = selectedDropdown.value;
+
+  console.log(`Selected Period: ${idx}, Faculty: ${faculty}`);
+
+  if (selectedDropdown.selectedIndex > 0) {
+    selectedDropdown.classList.add('selectedPeriod');
+    formData.periodsArr[idx] = {
+        "no": parseInt(idx) + 1,
+        "faculty": faculty
+    };
+  } else {
+    selectedDropdown.classList.remove('selectedPeriod');
+    formData.periodsArr[idx] = undefined;
+  }
+
+  console.log(JSON.stringify(formData.periodsArr));
+}
+
+//------------------------------------------------------------------
+
+
 
 const dateHandler = ele => formData.date = ele.value;
 
@@ -95,8 +148,6 @@ const fetchData = () => {
         .catch(e => console.error("Error in fetchData: ", e)); 
 }
 
-
-
 // validate data before submitting form
 const validateData = () => {
     if(formData.roll==null){
@@ -107,7 +158,7 @@ const validateData = () => {
         alert("Please fill Date first🙅🙅");
         return false;
     }
-    if(selectedButs.every(el => el==false)){
+    if(formData.periodsArr.every(el => el==null)){
         alert("Select atleast one period🙅🙅");
         return false;
     }
@@ -118,29 +169,22 @@ const validateData = () => {
 // submitting info
 const handleSubmit = () => {
     if(!validateData()) return;
-
-    //formData.periodsArr = selectedButs.map((sel, idx) => sel ? { "no": idx + 1, "faculty": "Amitas" } : null).filter(Boolean);
-    selectedButs.forEach((sel, idx) =>{
-        if(sel)
-            formData.periodsArr.push({
-                "no": idx + 1,
-                "faculty": "Amitas"
-        })
-    })
+    formData.periodsArr = formData.periodsArr.filter(item => item !== null);
+    
     console.log("Submitting data : "+JSON.stringify(formData));
 
     submitRequestAPI(formData)
         .then( res => {
             if(res.status == 201){ 
-                alert("Request Submitted. See Console");
-                formData = {
-                    roll: null,
-                    date:null,
-                    periodsArr:[]
-                }
+                alert("Request Submitted.✅");
+                location.reload();
             }
         })
-        .catch(e => console.error("Error in handleSubmit: ", e));
+        .catch(e => {
+            alert('Submission Error');
+            //console.error("Error in handleSubmit: ", e);
+            location.reload();
+        });
 };
 
 // API CALLERS

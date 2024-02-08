@@ -15,12 +15,11 @@
             <h2>Attendence Rectification Portal</h2>
             <br>
 
-            <form>
-
+            <form autocomplete="off">
                 <div class="input-group">
                     <label for="roll"><b>Roll No</b></label>
                     <input type="number" id="rollIn" name="roll number" placeholder="Enter Your Roll">
-                    <button id="verifyBut" type="button">Verify</button> <!--Dont change this tag's id-->
+                    <button id="verifyBut" type="button">Verify</button>
                 </div>
 
                 <div class="input-group">
@@ -32,18 +31,32 @@
                     <label for="period"><b>Period</b></label>
                     <br>
                     <div class="buttonContainer">
-                        <button type="button" index="0">1</button>
-                        <button type="button" index="1">2</button>
-                        <button type="button" index="2">3</button>
-                        <button type="button" index="3">4</button>
-
-                        <br>
-                        <button type="button" index="4">5</button>
-                        <button type="button" index="5">6</button>
-                        <button type="button" index="6">7</button>
-                        <button type="button" index="7">8</button>
-                        <br>
-                        <button type="button" index="8">Evening Class</button>
+                      <select class="period-dropdown" index="0">
+                        <option value="1" selected>1</option>
+                      </select>
+                      <select class="period-dropdown" index="1">
+                        <option value="2" selected>2</option>
+                      </select>
+                      <select class="period-dropdown" index="2">
+                        <option value="3" selected>3</option>
+                      </select>
+                      <select class="period-dropdown" index="3">
+                        <option value="4" selected>4</option>
+                      </select>
+                      <select class="period-dropdown" index="4">
+                        <option value="5" selected>5</option>
+                      </select>
+                      <select class="period-dropdown" index="5">
+                        <option value="6" selected>6</option>
+                      </select>                        
+                      <select class="period-dropdown" index="6">
+                        <option value="7" selected>7</option>
+                      </select>
+                      <select class="period-dropdown" index="7">
+                        <option value="8" selected>8</option>
+                      </select>
+                      <br>
+                      <button id="evening" type="button" index="8">Evening Class</button>
                     </div>
                 </div>
 
@@ -53,10 +66,8 @@
             </form>
         </div>
         
-        <!--Dont change this container box id-->
         <div id="personData"></div>
     </div>
-     
   <script src="./requestAssets/request.js"></script>
 </body>
 

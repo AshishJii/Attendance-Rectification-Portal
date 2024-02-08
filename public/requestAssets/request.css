@@ -146,31 +146,27 @@ body{
   border: 1px solid white;
 }
 
-.buttonContainer button {
-  border: none;
-  color: rgb(255, 255, 255);
+.buttonContainer button,
+.buttonContainer select {
+  background-color: #515aba;
+  opacity: 0.7;
+  border: 2px solid #edf1f0;
+  color: #ffffff;
   padding: 10px 30px;
   text-align: center;
   text-decoration: none;
   display: inline-block;
   font-size: 12px;
   margin: 4px 2px;
-  transition-duration: 0.4s;
-  cursor: pointer;
-  background-color: #515aba;
-  opacity: 0.7;
-  border: 2px solid #edf1f0;
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   border-radius: 10px;
+  cursor: pointer;
+  width: 120px;
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
 }
 
-/* #buttonContainer button:hover {
-  background-color: #dddddd;
-  color: rgb(43, 41, 41);
-  font-size: 25px;
-  font-family: Roboto, serif;
-
-} */
+.buttonContainer button{
+  width: fit-content;
+}
 
 #submitBut {
   background-color: #191e55;
@@ -198,8 +194,6 @@ body{
   box-sizing: border-box;
   margin-left: 0px;
 }
-
-
 
 .buttonContainer .selectedPeriod {
   background-color: blue;
