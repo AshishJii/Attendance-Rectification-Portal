@@ -38,7 +38,10 @@ verifyBut.addEventListener('click', ()=>fetchData());
 //------------------------------------------------------------------
 
 const periodDropdowns = document.querySelectorAll('.buttonContainer .period-dropdown');
-const facultyArr = ['Amitas', 'Raghaw Shukla', 'Smita Mishra', 'RO water'];
+
+//(temporary:when updating here, update the list at rectifs.js also with phone number). later this will come from api calls.
+const facultyArr = ['Amitas', 'Syed Suboor Aziz', 'Atul Chaturvedi','Smeeta Mishra'];
+
 
 function addOptionsToDropdown(dropdown) {
     facultyArr.forEach((faculty, index) => {
