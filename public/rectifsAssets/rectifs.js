@@ -4,33 +4,41 @@ const ByStudentBut = document.querySelector("#grpByStudent");
 const ByFacultyBut = document.querySelector("#grpByFaculty");
 
 const headings_grpStudent =  ['No.','Name/ID','Date','Periods','Delete?'];
-const headings_grpFaculty = ['Faculty','Date','ID','Name','Periods','Send'];
+const headings_grpFaculty = ['Faculty','Date','ID','Name','Periods','Share'];
 
 const GRPED_BYSTUDENT_RECTIF_URL = 'http://127.0.0.1:4001/api/rectifs_bystudent';
 const GRPED_BYFACULTY_RECTIF_URL = 'http://127.0.0.1:4001/api/rectifs_byfaculty';
 const DELETE_RECTIF_URL = 'http://127.0.0.1:4001/api/rectifications/';
-
-//(temporary:when updating here, update the list at request.js also). later this will come from api calls.
-const FACULTY_MAP = {'Amitas': 9208456642, 'Syed Suboor Aziz': 9695856417, 'Atul Chaturvedi':9412158877,'Smeeta Mishra':8586079093};
 
 ByStudentBut.addEventListener('click', () => populateByStudent());
 ByFacultyBut.addEventListener('click', () => populateByFaculty());
 
 window.onload = () => populateByStudent();
 
+populateHead = (headings) => {
+    tableHead.innerHTML = "";
+    let row = document.createElement("tr");
+    headings.forEach(heading => {
+        let th = document.createElement("th");
+        th.textContent = heading;
+        row.appendChild(th);
+    });
+    tableHead.append(row);
+}
+
 populateByStudent = () => {
     populateHead(headings_grpStudent);
     tableBody.innerHTML = "";
     fetchRectifsAPI(GRPED_BYSTUDENT_RECTIF_URL).then( res => {
-        console.log(JSON.stringify(res));
-
         let serialNo = 1;
+        console.log(JSON.stringify(res));
         res.data.forEach(rectif=> {
             let row = createRow_studentGrp(rectif, serialNo++);
             tableBody.appendChild(row);
-        });
-        tableBody.addEventListener('click', addDeleteListeners);
-    }).catch(err=> console.log(JSON.stringify(err)));
+        })
+    });
+    
+    tableBody.addEventListener('click', addDeleteListeners);
 }
 
 populateByFaculty = () => {
@@ -42,16 +50,36 @@ populateByFaculty = () => {
         res.data.forEach(faculty => {
             faculty.rectifs.forEach((rectif, rectifIndex) => {
               rectif.students.forEach((student, studentIndex) => {
-                let row = createRow_facultyGrp(faculty, rectif, student, rectifIndex, studentIndex);
+
+                let row = document.createElement("tr");
+                row.innerHTML =`
+                  <tr>
+                    ${rectifIndex == 0 && studentIndex === 0 ? `<td rowspan="${calculateFacultyRowspan(faculty.rectifs)}">${faculty._id}</td>` : ''}
+                    ${studentIndex === 0 ? `<td rowspan="${rectif.students.length}">${rectif.date}</td>` : ''}
+                    
+                    <td>${student.student.roll}</td>
+                    <td>${student.student.name}</td>
+                    <td>${JSON.stringify(student.periodsArr)}</td>
+                    
+                    ${rectifIndex == 0 && studentIndex === 0 ?
+                        `<td rowspan="${calculateFacultyRowspan(faculty.rectifs)}"><button class='share-button' >🏃</button></td>` : ''}
+                  </tr>
+                `;
+
                 tableBody.appendChild(row);
               });
             });
           });
-          tableBody.addEventListener('click', (e) => addShareListeners(e, res.data));
-    }).catch(err=> console.log(JSON.stringify(err)));;
+    });
+    
+
+    //REMOVE BELOW LINE // INSTEAD ADD DELETE ALL BUTTON
+    //tableBody.addEventListener('click', addDeleteListeners);
+    tableBody.addEventListener('click', addShareListeners);
 }
 
-const addDeleteListeners = (e) => {
+//Attaching listeners to delete buttons
+addDeleteListeners = (e) => {
     if(e.target.classList.contains('delete-button')){
         let row = e.target.closest('tr');
         let id = row.getAttribute('data-roll');
@@ -65,45 +93,14 @@ const addDeleteListeners = (e) => {
     }
 }
 
-const addShareListeners = (e,data) => {
-    if(!e.target.classList.contains('share-button')) return;
+addShareListeners = (e) => {
+    if(e.target.classList.contains('share-button')){
+        // let row = e.target.closest('tr');
+        // let id = row.getAttribute('data-roll');
+        // console.log(`Delete button clicked for ID: ${id}`);
 
-    let row = e.target.closest('tr');
-    let id = row.getAttribute('data-faculty');
-
-    let phoneNum = FACULTY_MAP[id]; //getting faculty name from static global array; TODO : change it
-
-    console.log(`Faculty: ${id} ${phoneNum}`);
-    const perio = data.find(item => item._id === id);
-
-    let result = "";
-    perio.rectifs.forEach(rectif => {
-        result += `\nDate: ${rectif.date}\n---------------------\n`;
-        rectif.students.forEach(studentInfo => {
-            const student = studentInfo.student;
-            const periods = studentInfo.periodsArr.join(', ');
-            result += `${student.name}(${student.roll})\nPeriod: ${periods}\n`;
-        });
-    });
-
-    const urlFriendlyText = encodeURIComponent(result);
-
-    //Temporary override
-    phoneNum = 6394909077;
-
-    const waMeLink = `https://wa.me/91${phoneNum}?text=${urlFriendlyText}`;
-    window.open(waMeLink, '_blank');
-}
-
-const populateHead = (headings) => {
-    tableHead.innerHTML = "";
-    let row = document.createElement("tr");
-    headings.forEach(heading => {
-        let th = document.createElement("th");
-        th.textContent = heading;
-        row.appendChild(th);
-    });
-    tableHead.append(row);
+        alert('Our Elite team of developers is working hard to implement this feature. Stay tuned!😁');
+    }
 }
 
 const createRow_studentGrp = (rectif, serialNo) => {
@@ -125,21 +122,6 @@ const createRow_studentGrp = (rectif, serialNo) => {
     return row;
 }
 
-const createRow_facultyGrp = (faculty, rectif, student, rectifIndex, studentIndex) => {
-    let row = document.createElement("tr");
-    row.setAttribute("data-faculty", faculty._id);
-    row.innerHTML = `
-        ${rectifIndex == 0 && studentIndex === 0 ? `<td rowspan="${calculateFacultyRowspan(faculty.rectifs)}">${faculty._id}</td>` : ''}
-        ${studentIndex === 0 ? `<td rowspan="${rectif.students.length}">${rectif.date}</td>` : ''}
-        <td>${student.student.roll}</td>
-        <td>${student.student.name}</td>
-        <td>${JSON.stringify(student.periodsArr)}</td>
-        ${rectifIndex == 0 && studentIndex === 0 ? `<td rowspan="${calculateFacultyRowspan(faculty.rectifs)}"><button class='share-button'>🏃</button></td>` : ''}
-    `;
-    return row;
-};
-
-//helper function for createRow_facultyGrp(for calculating row merges)
 function calculateFacultyRowspan(rectifs) {
     return rectifs.reduce((total, rectif) => total + rectif.students.length, 0);
 }
