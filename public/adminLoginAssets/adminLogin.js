@@ -2,6 +2,7 @@
 const loginBut = document.querySelector("#loginBut");
 const username = document.querySelector('#username');
 const password = document.querySelector('#password');
+const errBox = document.querySelector(".errBox");
 
 
 const LOGIN_URL ='http://127.0.0.1:4001/login';
@@ -14,7 +15,8 @@ loginBut.addEventListener('click', () => {
             window.location.href = "./rectifications";
         }
     }).catch(err => {
-        alert('Login Failed. Invalid Credentials!');
+        errBox.classList.add('d-flex');
+        errBox.querySelector("div").textContent = "Login Failed. Invalid Credentials!";
     })    
 });
 

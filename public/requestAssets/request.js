@@ -1,5 +1,9 @@
 //Declaring variables
 const buttonsContainer = document.querySelector(".buttonContainer");
+const warnBox = document.querySelector(".warnBox");
+const errBox = document.querySelector(".errBox");
+const okkBox = document.querySelector(".okkBox");
+
 const rollInput = document.querySelector("#rollIn");
 const pdContainer = document.querySelector("#personData");
 const dateInput = document.querySelector("#dateIn");
@@ -88,11 +92,27 @@ const dateHandler = ele => formData.date = ele.value;
 // fetches name & image from roll no.
 const fetchData = () => {
     const roll = rollInput.value;
-    if(roll === '')
-        return alert("Please enter Roll no.");
-    
+    if(roll === ''){
+        errBox.classList.remove('d-flex');
+        errBox.classList.add('d-none');
+
+        warnBox.classList.remove('d-none');
+        warnBox.classList.add('d-flex');
+        warnBox.querySelector("div").textContent = "Please enter Roll number";
+        return;
+        //return alert("Please enter Roll no.");
+    }
     fetchInfoAPI(roll)
         .then((msg) => {
+            if(msg.data==null){
+                warnBox.classList.remove('d-flex');
+                warnBox.classList.add('d-none');
+                
+                errBox.classList.remove('d-none');
+                errBox.classList.add('d-flex');
+                errBox.querySelector("div").textContent = "Student ID not found";
+                return;
+            }
             console.log("Fetched Data : "+JSON.stringify(msg.data.student));
             pdContainer.innerHTML = "";
             if(msg.status !== 'success'){
@@ -151,16 +171,37 @@ const fetchData = () => {
 // validate data before submitting form
 const validateData = () => {
     if(formData.roll==null){
-        alert("Please verify Roll no. first🙅🙅");
-        return false;
+        errBox.classList.remove('d-flex');
+        errBox.classList.add('d-none');
+
+        warnBox.classList.remove('d-none');
+        warnBox.classList.add('d-flex');
+        warnBox.querySelector("div").textContent = "Please verify your roll number";
+        return;
+        //alert("Please verify Roll no. first🙅🙅");
+        //return false;
     }
     if(formData.date == null){
-        alert("Please fill Date first🙅🙅");
-        return false;
+        errBox.classList.remove('d-flex');
+        errBox.classList.add('d-none');
+
+        warnBox.classList.remove('d-none');
+        warnBox.classList.add('d-flex');
+        warnBox.querySelector("div").textContent = "Please fill Rectification Date";
+        return;
+        //alert("Please fill Date first🙅🙅");
+        //return false;
     }
     if(formData.periodsArr.every(el => el==null)){
-        alert("Select atleast one period🙅🙅");
-        return false;
+        errBox.classList.remove('d-flex');
+        errBox.classList.add('d-none');
+
+        warnBox.classList.remove('d-none');
+        warnBox.classList.add('d-flex');
+        warnBox.querySelector("div").textContent = "Select atleast one period for rectification";
+        return;
+        //alert("Select atleast one period🙅🙅");
+        //return false;
     }
 
     return true;
@@ -176,8 +217,17 @@ const handleSubmit = () => {
     submitRequestAPI(formData)
         .then( res => {
             if(res.status == 201){ 
-                alert("Request Submitted.✅");
-                location.reload();
+                errBox.classList.remove('d-flex');
+                errBox.classList.add('d-none');
+                warnBox.classList.remove('d-flex');
+                warnBox.classList.add('d-none');
+
+                okkBox.classList.remove('d-none');
+                okkBox.classList.add('d-flex');
+                okkBox.querySelector("div").textContent = "Request Submitted";
+
+                //alert("Request Submitted.✅");
+                //location.reload();
             }
         })
         .catch(e => {
